@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexo – Hyperlocal Task Marketplace</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Playfair+Display:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #F7F8FA;
+            color: #1a1a2e;
+            min-height: 100vh
+        }
+
+        @keyframes marquee {
+            0% {
+                transform: translateX(0)
+            }
+
+            100% {
+                transform: translateX(-50%)
+            }
+        }
+
+        .marquee-track {
+            display: flex;
+            gap: 18px;
+            animation: marquee 32s linear infinite;
+            width: max-content
+        }
+
+        .marquee-wrap {
+            overflow: hidden;
+            width: 100%;
+            cursor: pointer
+        }
+
+        .marquee-wrap:hover .marquee-track {
+            animation-play-state: paused
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(80px);
+                opacity: 0
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateY(0);
+                opacity: 1
+            }
+
+            to {
+                transform: translateY(80px);
+                opacity: 0
+            }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a1a2e;
+            color: #fff;
+            padding: 14px 24px;
+            border-radius: 32px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 9999;
+            animation: slideIn 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2)
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .page {
+            animation: fadeUp 0.25s ease
+        }
+
+        .nav {
+            background: #fff;
+            border-bottom: 1px solid #ebebeb;
+            padding: 0 48px;
+            height: 66px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 200
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            color: #00A870;
+            cursor: pointer;
+            font-weight: 700;
+            letter-spacing: -0.5px
+        }
+
+        .logo span {
+            color: #1a1a2e
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            align-items: center
+        }
+
+        .nav-link {
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+            font-weight: 500;
+            transition: color 0.18s;
+            position: relative;
+            padding-bottom: 2px
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #00A870;
+            transition: width 0.2s
+        }
+
+        .nav-link:hover::after,
+        .nav-link.act::after {
+            width: 100%
+        }
+
+        .nav-link:hover,
+        .nav-link.act {
+            color: #00A870
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: none;
+            border-radius: 32px;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.18s;
+            white-space: nowrap
+        }
+
+        .btn-green {
+            background: #00A870;
+            color: #fff;
+            padding: 11px 26px;
+            font-size: 14px
+        }
+
+        .btn-green:hover {
+            background: #009060;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(0, 168, 112, 0.25)
+        }
+
+        .btn-ghost {
+            background: #fff;
+            color: #00A870;
+            border: 1.5px solid #00A870;
+            padding: 10px 24px;
+            font-size: 14px
+        }
+
+        .btn-ghost:hover {
+            background: #f0fdf8
+        }
+
+        .btn-dark {
+            background: #1a1a2e;
+            color: #fff;
+            padding: 11px 26px;
+            font-size: 14px
+        }
+
+        .btn-dark:hover {
+            background: #2a2a45;
+            transform: translateY(-1px)
+        }
+
+        .btn-sm {
+            padding: 8px 18px;
+            font-size: 13px
+        }
+
+        .btn-full {
+            width: 100%;
+            justify-content: center
+        }
+
+        .btn-icon {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            border-radius: 50%;
+            border: 1px solid #eee;
+            background: #fff;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.18s
+        }
+
+        .btn-icon:hover {
+            border-color: #00A870;
+            background: #f0fdf8
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 18px;
+            border: 1px solid #ebebeb;
+            padding: 22px;
+            transition: all 0.2s
+        }
+
+        .card:hover {
+            box-shadow: 0 10px 32px rgba(0, 168, 112, 0.1);
+            transform: translateY(-3px);
+            border-color: #c8f0e2
+        }
+
+        .card-flat {
+            background: #fff;
+            border-radius: 18px;
+            border: 1px solid #ebebeb;
+            padding: 22px
+        }
+
+        .task-card-wrap {
+            cursor: pointer
+        }
+
+        .cat-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin: 0 auto 12px;
+            transition: all 0.2s
+        }
+
+        .cat-card {
+            background: #fff;
+            border-radius: 18px;
+            border: 1px solid #ebebeb;
+            padding: 22px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s
+        }
+
+        .cat-card:hover {
+            box-shadow: 0 8px 24px rgba(0, 168, 112, 0.12);
+            transform: translateY(-3px);
+            border-color: #c8f0e2
+        }
+
+        .fg {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 18px
+        }
+
+        .flabel {
+            font-size: 13px;
+            font-weight: 500;
+            color: #444;
+            letter-spacing: 0.1px
+        }
+
+        .finput,
+        .fselect,
+        .ftextarea {
+            border: 1.5px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 14px;
+            font-family: 'DM Sans', sans-serif;
+            outline: none;
+            transition: border 0.18s, box-shadow 0.18s;
+            background: #fff;
+            color: #1a1a2e;
+            width: 100%
+        }
+
+        .finput:focus,
+        .fselect:focus,
+        .ftextarea:focus {
+            border-color: #00A870;
+            box-shadow: 0 0 0 3px rgba(0, 168, 112, 0.1)
+        }
+
+        .ftextarea {
+            resize: vertical;
+            min-height: 110px
+        }
+
+        .fselect {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #fff;
+            border: 1.5px solid #e0e0e0;
+            border-radius: 24px;
+            padding: 7px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.18s;
+            color: #555;
+            user-select: none
+        }
+
+        .chip:hover,
+        .chip.on {
+            background: #E8FAF3;
+            border-color: #00A870;
+            color: #00A870
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            border-radius: 24px;
+            padding: 4px 11px;
+            font-size: 12px;
+            font-weight: 500
+        }
+
+        .b-green {
+            background: #E8FAF3;
+            color: #00924a
+        }
+
+        .b-blue {
+            background: #E8F0FE;
+            color: #1a56b0
+        }
+
+        .b-amber {
+            background: #FEF3E2;
+            color: #b45309
+        }
+
+        .b-gray {
+            background: #f3f4f6;
+            color: #555
+        }
+
+        .b-red {
+            background: #FEE2E2;
+            color: #b91c1c
+        }
+
+        .av {
+            border-radius: 50%;
+            background: #E8FAF3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: #00924a;
+            flex-shrink: 0
+        }
+
+        .stars {
+            color: #F59E0B
+        }
+
+        .div {
+            height: 1px;
+            background: #f0f0f0;
+            margin: 20px 0
+        }
+
+        .sidebar-card {
+            background: #fff;
+            border-radius: 20px;
+            border: 1px solid #ebebeb;
+            padding: 26px;
+            position: sticky;
+            top: 82px
+        }
+
+        .auth-wrap {
+            min-height: calc(100vh - 66px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            background: #F7F8FA
+        }
+
+        .auth-card {
+            background: #fff;
+            border-radius: 24px;
+            border: 1px solid #ebebeb;
+            padding: 44px;
+            width: 100%;
+            max-width: 420px
+        }
+
+        .prog-bar {
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden
+        }
+
+        .prog-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00A870, #00d68a);
+            border-radius: 4px;
+            transition: width 0.4s ease
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            border-radius: 4px;
+            background: #e0e0e0;
+            outline: none
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #00A870;
+            cursor: pointer;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 6px rgba(0, 168, 112, 0.3)
+        }
+
+        .map-ph {
+            background: linear-gradient(135deg, #e8f5e9, #f0fdf8);
+            border-radius: 16px;
+            height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1.5px dashed #b0e8d4;
+            position: relative;
+            overflow: hidden
+        }
+
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #d0d0d0;
+            border-radius: 4px
+        }
+
+        .tag {
+            background: #E8FAF3;
+            color: #00924a;
+            border-radius: 20px;
+            padding: 5px 14px;
+            font-size: 13px;
+            font-weight: 500;
+            display: inline-block
+        }
+
+        .section {
+            padding: 64px 48px
+        }
+
+        .s-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 30px;
+            color: #1a1a2e;
+            line-height: 1.2
+        }
+
+        .s-sub {
+            font-size: 15px;
+            color: #999;
+            margin-top: 6px
+        }
+
+        .row {
+            display: flex;
+            align-items: center;
+            gap: 12px
+        }
+
+        .grid2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px
+        }
+
+        .grid3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px
+        }
+
+        .grid4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px
+        }
+
+        .between {
+            display: flex;
+            align-items: center;
+            justify-content: space-between
+        }
+
+        .notif-dot {
+            width: 8px;
+            height: 8px;
+            background: #ef4444;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            right: 2px
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useCallback } = React;
+
+        /* ══ MODEL ══ */
+        const TASKS = [
+            { id: 1, title: "Deep clean 3-bedroom apartment", desc: "Full deep clean including kitchen, bathrooms, and all rooms. Bring your own supplies. Looking for thorough and reliable help.", budget: 4500, dist: 1.2, deadline: "May 10", cat: "Cleaning", status: "open", urgent: false, poster: { name: "Ayesha K.", rating: 4.8, reviews: 12, av: "AK" } },
+            { id: 2, title: "Fix leaking kitchen faucet", desc: "Kitchen faucet has been dripping for a week. Need a licensed plumber ASAP. Parts may be needed.", budget: 2000, dist: 0.8, deadline: "May 6", cat: "Repair", status: "open", urgent: true, poster: { name: "Omar B.", rating: 4.6, reviews: 7, av: "OB" } },
+            { id: 3, title: "Move furniture to new apartment", desc: "Need 3 people to help move heavy furniture across town. Truck is available, just need manpower.", budget: 6000, dist: 3.5, deadline: "May 12", cat: "Moving", status: "open", urgent: false, poster: { name: "Sara N.", rating: 4.9, reviews: 23, av: "SN" } },
+            { id: 4, title: "MCAT prep tutoring — 3 sessions", desc: "Looking for an experienced MCAT tutor for Biology and Chemistry sections. Online or in-person.", budget: 9000, dist: 2.1, deadline: "May 15", cat: "Tutoring", status: "open", urgent: false, poster: { name: "Ali H.", rating: 5.0, reviews: 34, av: "AH" } },
+            { id: 5, title: "Grocery delivery from Imtiaz", desc: "Pick up grocery list from Imtiaz Super Store and deliver to DHA Phase 5. List will be provided.", budget: 800, dist: 0.5, deadline: "May 5", cat: "Delivery", status: "open", urgent: true, poster: { name: "Fatima Z.", rating: 4.7, reviews: 9, av: "FZ" } },
+            { id: 6, title: "Install ceiling fan in bedroom", desc: "Replace old fan with a new one. Wiring already done, just need installation from an electrician.", budget: 1500, dist: 1.9, deadline: "May 8", cat: "Repair", status: "open", urgent: false, poster: { name: "Bilal M.", rating: 4.5, reviews: 5, av: "BM" } },
+            { id: 7, title: "Weekly house cleaning — 4 weeks", desc: "Need a reliable cleaner every Saturday morning for 4 weeks. 2BHK apartment, ~3 hours per session.", budget: 12000, dist: 2.8, deadline: "May 30", cat: "Cleaning", status: "open", urgent: false, poster: { name: "Hina R.", rating: 4.8, reviews: 18, av: "HR" } },
+            { id: 8, title: "A-level Physics tutor needed", desc: "Preparing for June exams. Need weekly sessions, patient tutor with strong results track record.", budget: 5000, dist: 1.4, deadline: "May 20", cat: "Tutoring", status: "open", urgent: false, poster: { name: "Zain A.", rating: 4.9, reviews: 41, av: "ZA" } },
+            { id: 9, title: "Garden trimming & lawn care", desc: "Medium-sized garden needs trimming, weeding, and lawn mowing. Equipment provided.", budget: 2500, dist: 0.9, deadline: "May 9", cat: "Gardening", status: "open", urgent: false, poster: { name: "Kamran S.", rating: 4.7, reviews: 16, av: "KS" } },
+            { id: 10, title: "Laptop screen replacement", desc: "Dell XPS screen cracked, need a skilled technician to replace it. Have the replacement panel.", budget: 3500, dist: 1.6, deadline: "May 11", cat: "Tech Help", status: "open", urgent: true, poster: { name: "Nadia F.", rating: 4.6, reviews: 8, av: "NF" } },
+        ];
+
+        const USERS = [
+            { id: 1, name: "Farooq Ahmed", rating: 4.9, reviews: 87, skills: ["Plumbing", "Electrical", "General Repair"], completed: 134, bio: "Full-time handyman with 6 years of experience across Karachi. Certified electrician.", av: "FA", since: "Jan 2024", earnings: "PKR 2.1L" },
+            { id: 2, name: "Amna Sheikh", rating: 4.8, reviews: 64, skills: ["Cleaning", "Organizing", "Laundry", "Ironing"], completed: 98, bio: "Professional cleaner, trusted by 60+ families. Detailed, thorough, punctual.", av: "AS", since: "Mar 2024", earnings: "PKR 1.4L" },
+            { id: 3, name: "Hassan Malik", rating: 4.7, reviews: 31, skills: ["Delivery", "Errands", "Moving", "Packing"], completed: 52, bio: "Fast and reliable for all delivery tasks. Own bike, available 7 days a week.", av: "HM", since: "Jun 2024", earnings: "PKR 0.7L" },
+        ];
+
+        const CATS = [
+            { name: "Cleaning", emoji: "🧹", count: 34, color: "#E8FAF3" },
+            { name: "Repair", emoji: "🔧", count: 28, color: "#FEF3E2" },
+            { name: "Delivery", emoji: "📦", count: 19, color: "#E8F0FE" },
+            { name: "Tutoring", emoji: "📚", count: 22, color: "#FCE8F0" },
+            { name: "Moving", emoji: "🚚", count: 11, color: "#E8FAF3" },
+            { name: "Gardening", emoji: "🌿", count: 8, color: "#F0FDF4" },
+            { name: "Tech Help", emoji: "💻", count: 15, color: "#EDE9FE" },
+            { name: "Cooking", emoji: "🍳", count: 6, color: "#FFF7ED" },
+        ];
+
+        const REVIEWS = [
+            { name: "Ayesha K.", av: "AK", text: "Farooq was incredibly professional. Fixed everything in under an hour. Will definitely hire again!", r: 5, task: "Plumbing repair", date: "Apr 28" },
+            { name: "Bilal M.", av: "BM", text: "Great work, quick and clean. Left the area spotless after the job. Highly recommend.", r: 5, task: "Fan installation", date: "Apr 22" },
+            { name: "Sara N.", av: "SN", text: "Arrived exactly on time, communicated well throughout. Very happy with the service.", r: 4, task: "Furniture moving", date: "Apr 15" },
+        ];
+
+        /* ══ TOAST ══ */
+        function useToast() {
+            const [toast, setToast] = useState(null);
+            const show = useCallback((msg, icon = "✓") => {
+                setToast({ msg, icon, id: Date.now() });
+                setTimeout(() => setToast(null), 2800);
+            }, []);
+            return { toast, show };
+        }
+        function Toast({ toast }) {
+            if (!toast) return null;
+            return <div className="toast"><span style={{ fontSize: 16 }}>{toast.icon}</span>{toast.msg}</div>;
+        }
+
+        /* ══ NAVBAR ══ */
+        function Navbar({ page, setPage, saved }) {
+            return (
+                <nav className="nav">
+                    <div className="logo" onClick={() => setPage('home')}>Nexo<span>.</span></div>
+                    <div className="nav-links">
+                        <span className={`nav-link${page === 'feed' ? ' act' : ''}`} onClick={() => setPage('feed')}>Browse Tasks</span>
+                        <span className={`nav-link${page === 'post' ? ' act' : ''}`} onClick={() => setPage('post')}>Post a Task</span>
+                        <span className={`nav-link${page === 'profile' ? ' act' : ''}`} onClick={() => setPage('profile')}>Profile</span>
+                        <span className={`nav-link${page === 'admin' ? ' act' : ''}`} onClick={() => setPage('admin')}>Admin</span>
+                        <div style={{ position: 'relative', display: 'inline-block' }} onClick={() => setPage('saved')}>
+                            <button className="btn-icon">🔖</button>
+                            {saved.length > 0 && <div className="notif-dot" />}
+                        </div>
+                        <button className="btn btn-green" onClick={() => setPage('login')}>Sign In</button>
+                    </div>
+                </nav>
+            );
+        }
+
+        /* ══ TASK CARD ══ */
+        function TaskCard({ task, onView, onSave, saved }) {
+            const isSaved = saved && saved.includes(task.id);
+            return (
+                <div className="card task-card-wrap" onClick={() => onView && onView(task)}>
+                    <div className="between" style={{ marginBottom: 12 }}>
+                        <div className="row" style={{ gap: 8 }}>
+                            <span className="badge b-gray">{task.cat}</span>
+                            {task.urgent && <span className="badge b-red">⚡ Urgent</span>}
+                        </div>
+                        <button style={{ width: 34, height: 34, fontSize: 15, border: 'none', background: 'transparent', cursor: 'pointer', opacity: isSaved ? 1 : 0.35, transition: 'opacity 0.2s' }}
+                            onClick={e => { e.stopPropagation(); onSave && onSave(task.id); }}>🔖</button>
+                    </div>
+                    <h3 style={{ fontSize: 15, fontWeight: 600, color: '#1a1a2e', marginBottom: 8, lineHeight: 1.4 }}>{task.title}</h3>
+                    <p style={{ fontSize: 13, color: '#888', lineHeight: 1.55, marginBottom: 14 }}>{task.desc.slice(0, 85)}…</p>
+                    <div className="between">
+                        <div style={{ display: 'flex', gap: 14, fontSize: 12, color: '#aaa' }}>
+                            <span>📍 {task.dist} km</span>
+                            <span>⏰ {task.deadline}</span>
+                        </div>
+                        <div style={{ fontFamily: 'Playfair Display,serif', fontSize: 20, color: '#00A870', fontWeight: 600 }}>PKR {task.budget.toLocaleString()}</div>
+                    </div>
+                    <div className="div" style={{ margin: '14px 0' }} />
+                    <div className="between">
+                        <div className="row">
+                            <div className="av" style={{ width: 30, height: 30, fontSize: 11 }}>{task.poster.av}</div>
+                            <span style={{ fontSize: 13, color: '#666', fontWeight: 500 }}>{task.poster.name}</span>
+                            <span className="stars" style={{ fontSize: 12 }}>★ {task.poster.rating}</span>
+                        </div>
+                        <button className="btn btn-green btn-sm" onClick={e => { e.stopPropagation(); onView && onView(task); }}>View →</button>
+                    </div>
+                </div>
+            );
+        }
+
+        /* ══ CAT CARD ══ */
+        function CatCard({ cat, onClick }) {
+            return (
+                <div className="cat-card" onClick={onClick}>
+                    <div className="cat-icon" style={{ background: cat.color }}>{cat.emoji}</div>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: '#1a1a2e', marginBottom: 4 }}>{cat.name}</div>
+                    <div style={{ fontSize: 12, color: '#aaa' }}>{cat.count} tasks nearby</div>
+                </div>
+            );
+        }
+
+        /* ══ HOME ══ */
+        function Home({ setPage, setTask, showToast }) {
+            const doubled = [...TASKS, ...TASKS];
+            const [query, setQuery] = useState('');
+            return (
+                <div className="page">
+                    <div style={{ background: '#fff', padding: '88px 48px 72px', textAlign: 'center', borderBottom: '1px solid #f0f0f0' }}>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#E8FAF3', borderRadius: 32, padding: '6px 16px', marginBottom: 24 }}>
+                            <span style={{ width: 7, height: 7, background: '#00A870', borderRadius: '50%', display: 'inline-block' }} />
+                            <span style={{ fontSize: 12, color: '#00924a', fontWeight: 500, letterSpacing: 0.5 }}>Live in Karachi · Lahore · Islamabad</span>
+                        </div>
+                        <h1 style={{ fontFamily: 'Playfair Display,serif', fontSize: 56, color: '#1a1a2e', lineHeight: 1.1, marginBottom: 18, letterSpacing: '-1px' }}>
+                            Get anything done,<br /><span style={{ color: '#00A870' }}>right nearby.</span>
+                        </h1>
+                        <p style={{ fontSize: 17, color: '#888', marginBottom: 40, maxWidth: 480, margin: '0 auto 40px', lineHeight: 1.6 }}>
+                            Post a task, match with verified locals, and track everything live.
+                        </p>
+                        <div style={{ display: 'flex', background: '#F7F8FA', border: '1.5px solid #e0e0e0', borderRadius: 40, overflow: 'hidden', maxWidth: 580, margin: '0 auto', padding: '6px 6px 6px 24px', alignItems: 'center', gap: 12, boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
+                            <span style={{ fontSize: 18 }}>🔍</span>
+                            <input style={{ flex: 1, border: 'none', background: 'transparent', fontSize: 15, outline: 'none', fontFamily: 'DM Sans,sans-serif', color: '#1a1a2e' }}
+                                placeholder="What do you need done today?" value={query} onChange={e => setQuery(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && setPage('feed')} />
+                            <button className="btn btn-green" onClick={() => setPage('feed')}>Find Help</button>
+                        </div>
+                        <div style={{ marginTop: 24, display: 'flex', gap: 28, justifyContent: 'center', fontSize: 13, color: '#aaa' }}>
+                            {['Verified providers', 'Real-time tracking', 'Secure payments', 'Instant match'].map(t => <span key={t}>✓ {t}</span>)}
+                        </div>
+                    </div>
+
+                    {/* Marquee */}
+                    <div style={{ background: '#FAFBFC', padding: '48px 0 40px', borderBottom: '1px solid #f0f0f0' }}>
+                        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+                            <span style={{ fontSize: 12, color: '#aaa', fontWeight: 500, letterSpacing: 1, textTransform: 'uppercase' }}>⚡ Live Tasks Near You — hover to pause</span>
+                        </div>
+                        <div className="marquee-wrap">
+                            <div className="marquee-track">
+                                {doubled.map((t, i) => (
+                                    <div key={i} style={{ width: 260, flexShrink: 0 }}>
+                                        <div className="card" style={{ transform: 'none' }} onClick={() => { setTask(t); setPage('detail'); }}>
+                                            <div className="between" style={{ marginBottom: 8 }}>
+                                                <span className="badge b-gray" style={{ fontSize: 11 }}>{t.cat}</span>
+                                                {t.urgent && <span className="badge b-red" style={{ fontSize: 11 }}>⚡</span>}
+                                            </div>
+                                            <p style={{ fontWeight: 600, fontSize: 13, color: '#1a1a2e', marginBottom: 8, lineHeight: 1.4 }}>{t.title.slice(0, 42)}…</p>
+                                            <div className="between">
+                                                <span style={{ fontSize: 12, color: '#aaa' }}>📍 {t.dist} km</span>
+                                                <span style={{ fontFamily: 'Playfair Display,serif', fontSize: 17, color: '#00A870', fontWeight: 600 }}>PKR {t.budget.toLocaleString()}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Categories */}
+                    <div className="section" style={{ background: '#fff', borderBottom: '1px solid #f0f0f0' }}>
+                        <div style={{ textAlign: 'center', marginBottom: 36 }}>
+                            <h2 className="s-title">Browse by Category</h2>
+                            <p className="s-sub">Find the right help for every task</p>
+                        </div>
+                        <div className="grid4" style={{ maxWidth: 900, margin: '0 auto' }}>
+                            {CATS.map(c => <CatCard key={c.name} cat={c} onClick={() => setPage('feed')} />)}
+                        </div>
+                    </div>
+
+                    {/* How it works */}
+                    <div className="section" style={{ background: '#F7F8FA', borderBottom: '1px solid #f0f0f0' }}>
+                        <div style={{ textAlign: 'center', marginBottom: 40 }}>
+                            <h2 className="s-title">How Nexo works</h2>
+                            <p className="s-sub">Get help in 3 simple steps</p>
+                        </div>
+                        <div className="grid3" style={{ maxWidth: 800, margin: '0 auto' }}>
+                            {[
+                                { n: '01', title: 'Post your task', desc: 'Describe what you need, set your budget, and choose your location radius.', icon: '📝' },
+                                { n: '02', title: 'Get matched instantly', desc: 'Verified providers near you see your task and apply within minutes.', icon: '⚡' },
+                                { n: '03', title: 'Done & paid securely', desc: 'Track progress live, complete the job, and pay safely in-app.', icon: '✅' },
+                            ].map(s => (
+                                <div key={s.n} className="card-flat" style={{ textAlign: 'center', padding: 32 }}>
+                                    <div style={{ fontSize: 32, marginBottom: 14 }}>{s.icon}</div>
+                                    <div style={{ fontFamily: 'Playfair Display,serif', fontSize: 13, color: '#00A870', marginBottom: 8 }}>{s.n}</div>
+                                    <h3 style={{ fontWeight: 600, fontSize: 16, marginBottom: 10, color: '#1a1a2e' }}>{s.title}</h3>
+                                    <p style={{ fontSize: 13, color: '#888', lineHeight: 1.6 }}>{s.desc}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Stats */}
+                    <div className="section" style={{ background: '#fff', borderBottom: '1px solid #f0f0f0' }}>
+                        <div style={{ display: 'flex', gap: 0, maxWidth: 800, margin: '0 auto', textAlign: 'center' }}>
+                            {[{ n: '2,400+', l: 'Tasks Completed' }, { n: '830+', l: 'Verified Providers' }, { n: '4.8 ★', l: 'Average Rating' }, { n: '< 5 min', l: 'Avg. Match Time' }].map((s, i) => (
+                                <div key={i} style={{ flex: 1, padding: '24px 16px', borderRight: i < 3 ? '1px solid #f0f0f0' : 'none' }}>
+                                    <div style={{ fontFamily: 'Playfair Display,serif', fontSize: 32, color: '#00A870', fontWeight: 600 }}>{s.n}</div>
+                                    <div style={{ fontSize: 13, color: '#999', marginTop: 6 }}>{s.l}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* CTA */}
+                    <div style={{ background: '#1a1a2e', padding: '72px 48px', textAlign: 'center' }}>
+                        <h2 style={{ fontFamily: 'Playfair Display,serif', fontSize: 36, color: '#fff', marginBottom: 12, letterSpacing: '-0.5px' }}>Ready to get started?</h2>
+                        <p style={{ color: 'rgba(255,255,255,0.5)', marginBottom: 36, fontSize: 16, maxWidth: 380, margin: '0 auto 36px' }}>Join thousands of people already using Nexo across Pakistan.</p>
+                        <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
+                            <button className="btn btn-ghost" onClick={() => setPage('post')}>Post a Task</button>
+                            <button className="btn btn-green" onClick={() => setPage('login')}>Join as Provider</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        /* ══ FEED ══ */
+        function Feed({ setPage, setTask, saved, onSave, showToast }) {
+            const [cat, setCat] = useState('All');
+            const [sort, setSort] = useState('default');
+            const [maxBudget, setMaxBudget] = useState(15000);
+            const [maxDist, setMaxDist] = useState(5);
+            const [showFilters, setShowFilters] = useState(false);
+            const cats = ['All', 'Cleaning', 'Repair', 'Delivery', 'Tutoring', 'Moving', 'Gardening', 'Tech Help'];
+            let list = cat === 'All' ? TASKS : TASKS.filter(t => t.cat === cat);
+            list = list.filter(t => t.budget <= maxBudget && t.dist <= maxDist);
+            if (sort === 'budget-lo') list = [...list].sort((a, b) => a.budget - b.budget);
+            if (sort === 'budget-hi') list = [...list].sort((a, b) => b.budget - a.budget);
+            if (sort === 'dist') list = [...list].sort((a, b) => a.dist - b.dist);
+            return (
+                <div className="page" style={{ maxWidth: 1100, margin: '0 auto', padding: '44px 48px' }}>
+                    <div className="between" style={{ marginBottom: 28 }}>
+                        <div>
+                            <h1 style={{ fontFamily: 'Playfair Display,serif', fontSize: 30, color: '#1a1a2e', marginBottom: 4 }}>Browse Tasks</h1>
+                            <p style={{ color: '#999', fontSize: 14 }}>{list.length} tasks near you</p>
+                        </div>
+                        <div className="row">
+                            <select className="fselect" style={{ width: 'auto', padding: '9px 36px 9px 14px', fontSize: 13 }} value={sort} onChange={e => setSort(e.target.value)}>
+                                <option value="default">Sort: Recommended</option>
+                                <option value="budget-hi">Budget: High to Low</option>
+                                <option value="budget-lo">Budget: Low to High</option>
+                                <option value="dist">Distance: Nearest</option>
+                            </select>
+                            <button className="btn btn-ghost btn-sm" onClick={() => setShowFilters(!showFilters)}>{showFilters ? 'Hide Filters' : '⚙ Filters'}</button>
+                        </div>
+                    </div>
+                    {showFilters && (
+                        <div className="card-flat" style={{ marginBottom: 24, padding: 24 }}>
+                            <div className="grid2">
+                                <div>
+                                    <div style={{ fontSize: 13, fontWeight: 500, color: '#444', marginBottom: 10 }}>Max Budget: <strong style={{ color: '#00A870' }}>PKR {maxBudget.toLocaleString()}</strong></div>
+                                    <input type="range" min="500" max="15000" step="500" value={maxBudget} onChange={e => setMaxBudget(+e.target.value)} />
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: 13, fontWeight: 500, color: '#444', marginBottom: 10 }}>Max Distance: <strong style={{ color: '#00A870' }}>{maxDist} km</strong></div>
+                                    <input type="range" min="0.5" max="10" step="0.5" value={maxDist} onChange={e => setMaxDist(+e.target.value)} />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    <div style={{ display: 'flex', gap: 10, marginBottom: 28, flexWrap: 'wrap' }}>
+                        {cats.map(c => <span key={c} className={`chip${cat === c ? ' on' : ''}`} onClick={() => setCat(c)}>{CATS.find(x => x.name === c)?.emoji || ''} {c}</span>)}
+                    </div>
+                    {list.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '80px 20px', color: '#aaa' }}>
+                            <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
+                            <p style={{ fontSize: 16 }}>No tasks match your filters</p>
+                            <button className="btn btn-green" style={{ marginTop: 16 }} onClick={() => { setCat('All'); setMaxBudget(15000); setMaxDist(5); }}>Clear Filters</button>
+                        </div>
+                    ) : (
+                        <div className="grid2">
+                            {list.map(t => <TaskCard key={t.id} task={t} onView={t => { setTask(t); setPage('detail'); }} onSave={id => { onSave(id); showToast(saved.includes(id) ? 'Removed from saved' : 'Task saved!', '🔖'); }} saved={saved} />)}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        /* ══ DETAIL ══ */
+        function Detail({ task, setPage, saved, onSave, showToast }) {
+            const t = task || TASKS[0];
+            const [accepted, setAccepted] = useState(false);
+            const [msg, setMsg] = useState('');
+            const [sent, setSent] = useState(false);
+            const isSaved = saved.includes(t.id);
+            return (
+                <div className="page" style={{ maxWidth: 1060, margin: '0 auto', padding: '44px 48px' }}>
+                    <button onClick={() => setPage('feed')} style={{ background: 'none', border: 'none', color: '#00A870', cursor: 'pointer', fontSize: 14, fontWeight: 500, marginBottom: 28, display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'DM Sans,sans-serif', padding: 0 }}>← Back to Browse</button>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 36 }}>
+                        <div>
+                            <div className="row" style={{ marginBottom: 18, flexWrap: 'wrap', gap: 8 }}>
+                                <span className="badge b-gray">{t.cat}</span>
+                                <span className="badge b-green">● Open</span>
+                                {t.urgent && <span className="badge b-red">⚡ Urgent</span>}
+                            </div>
+                            <h1 style={{ fontFamily: 'Playfair Display,serif', fontSize: 30, color: '#1a1a2e', marginBottom: 18, lineHeight: 1.25 }}>{t.title}</h1>
+                            <div className="row" style={{ marginBottom: 28, color: '#aaa', fontSize: 13, gap: 20, flexWrap: 'wrap' }}>
+                                <span>📍 {t.dist} km away</span><span>⏰ Due {t.deadline}</span><span>🏷️ {t.cat}</span>
+                            </div>
+                            <div className="div" />
+                            <div className="map-ph" style={{ marginBottom: 24 }}>
+                                <div style={{ textAlign: 'center' }}>
+                                    <div style={{ fontSize: 36, marginBottom: 8 }}>🗺️</div>
+                                    <p style={{ fontSize: 13, color: '#666', fontWeight: 500 }}>Live map powered by Leaflet.js</p>
+                                    <p style={{ fontSize: 12, color: '#aaa' }}>Provider location tracked in real time</p>
+                                </div>
+                                <div style={{ position: 'absolute', top: 12, right: 12, background: '#fff', borderRadius: 8, padding: '6px 12px', fontSize: 12, color: '#00924a', fontWeight: 500, border: '1px solid #c8f0e2' }}>📍 DHA Phase 5, Karachi</div>
+                            </div>
+                            <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: '#1a1a2e' }}>Task Description</h3>
+                            <p style={{ fontSize: 15, color: '#555', lineHeight: 1.75, marginBottom: 24 }}>{t.desc} Our platform ensures all providers are background-verified and rated by real customers.</p>
+                            <div className="div" />
+                            <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 18, color: '#1a1a2e' }}>Posted by</h3>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+                                <div className="av" style={{ width: 54, height: 54, fontSize: 19 }}>{t.poster.av}</div>
+                                <div>
+                                    <div style={{ fontWeight: 600, fontSize: 15, color: '#1a1a2e', marginBottom: 4 }}>{t.poster.name}</div>
+                                    <div className="stars" style={{ fontSize: 14 }}>{'★'.repeat(Math.round(t.poster.rating))} <span style={{ color: '#888', fontSize: 12 }}>{t.poster.rating} · {t.poster.reviews} reviews</span></div>
+                                </div>
+                            </div>
+                            <div className="div" />
+                            <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 14, color: '#1a1a2e' }}>Send a Message</h3>
+                            {sent ? <div className="badge b-green" style={{ padding: '10px 16px', fontSize: 14 }}>✓ Message sent! The poster will respond shortly.</div> : (
+                                <div>
+                                    <textarea className="ftextarea" style={{ marginBottom: 12 }} placeholder="Hi, I'm interested in this task. I can…" value={msg} onChange={e => setMsg(e.target.value)} />
+                                    <button className="btn btn-dark btn-sm" onClick={() => { if (msg.trim()) { setSent(true); showToast('Message sent!', '💬'); } }}>Send Message</button>
+                                </div>
+                            )}
+                        </div>
+                        <div>
+                            <div className="sidebar-card">
+                                <div style={{ textAlign: 'center', marginBottom: 20, paddingBottom: 20, borderBottom: '1px solid #f0f0f0' }}>
+                                    <div style={{ fontSize: 12, color: '#aaa', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Task Budget</div>
+                                    <div style={{ fontFamily: 'Playfair Display,serif', fontSize: 40, color: '#00A870', fontWeight: 700 }}>PKR {t.budget.toLocaleString()}</div>
+                                    <div style={{ fontSize: 12, color: '#aaa', marginTop: 4 }}>Fixed price · No hidden fees</div>
+                                </div>
+                                {accepted ? (
+                                    <div style={{ background: '#E8FAF3', borderRadius: 12, padding: '16px', textAlign: 'center', marginBottom: 14 }}>
+                                        <div style={{ fontSize: 22, marginBottom: 6 }}>🎉</div>
+                                        <div style={{ fontWeight: 600, color: '#00924a', fontSize: 14 }}>Task Accepted!</div>
+                                        <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>{t.poster.name} has been notified.</div>
+                                    </div>
+                                ) : (
+                                    <button className="btn btn-green btn-full" style={{ padding: '14px', fontSize: 15, marginBottom: 12, borderRadius: 14 }} onClick={() => { setAccepted(true); showToast('Task accepted!', '🎉'); }}>Accept This Task</button>
+                                )}
+                                <button className="btn btn-ghost btn-full" style={{ padding: '13px', borderRadius: 14, marginBottom: 20 }}>💬 Send Message</button>
+                                <button onClick={() => { onSave(t.id); showToast(isSaved ? 'Removed from saved' : 'Task saved!', '🔖'); }}
+                                    style={{ width: '100%', background: 'none', border: '1.5px dashed #ddd', borderRadius: 14, padding: '11px', fontSize: 13, cursor: 'pointer', color: isSaved ? '#00924a' : '#aaa', fontFamily: 'DM Sans,sans-serif', marginBottom: 20, transition: 'all 0.2s' }}>
+                                    {isSaved ? '🔖 Saved' : '🔖 Save Task'}
+                                </button>
+                                <div className="div" style={{ margin: '0 0 16px' }} />
+                                <div style={{ fontSize: 13, color: '#888', lineHeight: 2 }}>
+                                    <div className="between"><span>📍 Distance</span><strong>{t.dist} km</strong></div>
+                                    <div className="between"><span>⏰ Deadline</span><strong>{t.deadline}</strong></div>
+                                    <div className="between"><span>🏷️ Category</span><strong>{t.cat}</strong></div>
+                                    <div className="between"><span>👤 Rating</span><strong>{t.poster.rating} ★</strong></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        /* ══ POST TASK ══ */
+        function PostTask({ setPage, showToast }) {
+            const [step, setStep] = useState(1);
+            const [submitted, setSubmitted] = useState(false);
+            const [form, setForm] = useState({ title: '', desc: '', budget: '', cat: 'Cleaning', loc: '', radius: '2km', deadline: '', type: 'fixed' });
+            const h = e => setForm({ ...form, [e.target.name]: e.target.value });
+            const pct = Math.round((step / 3) * 100);
+            if (submitted) return (
+                <div className="page" style={{ maxWidth: 560, margin: '80px auto', padding: '0 48px', textAlign: 'center' }}>
+                    <div style={{ width: 80, height: 80, background: '#E8FAF3', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, margin: '0 auto 24px' }}>🎉</div>
+                    <h2 style={{ fontFamily: 'Playfair Display,serif', fontSize: 30, marginBottom: 12 }}>Task Posted!</h2>
+                    <p style={{ color: '#888', marginBottom: 36, lineHeight: 1.6 }}>Your task is live and visible to verified providers near you.</p>
+                    <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                        <button className="btn btn-ghost" onClick={() => setPage('feed')}>Browse Tasks</button>
+                        <button className="btn btn-green" onClick={() => { setSubmitted(false); setStep(1); }}>Post Another</button>
+                    </div>
+                </div>
+            );
+            return (
+                <div className="page" style={{ maxWidth: 620, margin: '0 auto', padding: '50px 48px' }}>
+                    <div style={{ marginBottom: 36 }}>
+                        <h1 style={{ fontFamily: 'Playfair Display,serif', fontSize: 30, marginBottom: 4 }}>Post a Task</h1>
+                        <p style={{ color: '#999', fontSize: 14 }}>Step {step} of 3 — {['Task Details', 'Location & Budget', 'Review & Post'][step - 1]}</p>
+                        <div className="prog-bar" style={{ marginTop: 14 }}><div className="prog-fill" style={{ width: `${pct}%` }} /></div>
+                    </div>
+                    {step === 1 && (
+                        <div>
+                            <div className="fg"><label className="flabel">Task Title *</label><input className="finput" name="title" value={form.title} onChange={h} placeholder="e.g. Clean my 2-bedroom apartment" /></div>
+                            <div className="fg"><label className="flabel">Description *</label><textarea className="ftextarea" name="desc" value={form.desc} onChange={h} placeholder="Describe what needs to be done…" /></div>
+                            <div className="fg"><label className="flabel">Category</label><select className="fselect" name="cat" value={form.cat} onChange={h}>{CATS.map(c => <option key={c.name}>{c.name}</option>)}</select></div>
+                            <button className="btn btn-green" onClick={() => setStep(2)}>Next: Location & Budget →</button>
+                        </div>
+                    )}
+                    {step === 2 && (
+                        <div>
+                            <div className="fg"><label className="flabel">Location</label><input className="finput" name="loc" value={form.loc} onChange={h} placeholder="e.g. DHA Phase 5, Karachi" /></div>
+                            <div className="grid2">
+                                <div className="fg"><label className="flabel">Budget (PKR) *</label><input className="finput" name="budget" type="number" value={form.budget} onChange={h} placeholder="e.g. 3000" /></div>
+                                <div className="fg"><label className="flabel">Deadline</label><input className="finput" name="deadline" type="date" value={form.deadline} onChange={h} /></div>
+                            </div>
+                            <div className="fg"><label className="flabel">Pricing Type</label><div style={{ display: 'flex', gap: 10, marginTop: 4 }}>{['fixed', 'hourly', 'negotiable'].map(p => <span key={p} className={`chip${form.type === p ? ' on' : ''}`} onClick={() => setForm({ ...form, type: p })} style={{ textTransform: 'capitalize' }}>{p}</span>)}</div></div>
+                            <div className="fg"><label className="flabel">Search Radius</label><div style={{ display: 'flex', gap: 10, marginTop: 4 }}>{['1km', '2km', '5km', '10km'].map(r => <span key={r} className={`chip${form.radius === r ? ' on' : ''}`} onClick={() => setForm({ ...form, radius: r })}>{r}</span>)}</div></div>
+                            <div style={{ display: 'flex', gap: 12, marginTop: 8 }}><button className="btn btn-ghost" onClick={() => setStep(1)}>← Back</button><button className="btn btn-green" onClick={() => setStep(3)}>Review Task →</button></div>
+                        </div>
+                    )}
+                    {step === 3 && (
+                        <div>
+                            <div className="card-flat" style={{ marginBottom: 24 }}>
+                                <h3 style={{ fontWeight: 600, fontSize: 16, marginBottom: 16 }}>Review your task</h3>
+                                <div style={{ fontSize: 14, color: '#555', lineHeight: 2 }}>
+                                    <div className="between"><span style={{ color: '#aaa' }}>Title</span><strong>{form.title || '—'}</strong></div>
+                                    <div className="between"><span style={{ color: '#aaa' }}>Category</span><span className="badge b-gray">{form.cat}</span></div>
+                                    <div className="between"><span style={{ color: '#aaa' }}>Budget</span><strong style={{ color: '#00A870' }}>PKR {(+form.budget).toLocaleString() || '—'}</strong></div>
+                                    <div className="between"><span style={{ color: '#aaa' }}>Type</span><strong style={{ textTransform: 'capitalize' }}>{form.type}</strong></div>
+                                    <div className="between"><span style={{ color: '#aaa' }}>Location</span><strong>{form.loc || '—'}</strong></div>
+                                    <div className="between"><span style={{ color: '#aaa' }}>Radius</span><strong>{form.radius}</strong></div>
+                                </div>
+                            </div>
+                            <div style={{ background: '#FEF3E2', borderRadius: 12, padding: '12px 16px', marginBottom: 20, fontSize: 13, color: '#92400e' }}>ℹ️ Your task will be visible to verified providers within {form.radius} of your location.</div>
+                            <div style={{ display: 'flex', gap: 12 }}><button className="btn btn-ghost" onClick={() => setStep(2)}>← Edit</button><button className="btn btn-green" onClick={() => { setSubmitted(true); showToast('Task posted successfully!', '🎉'); }}>🚀 Post Task</button></div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        /* ══ PROFILE ══ */
+        function Profile({ showToast }) {
+            const u = USERS[0];
+            const [tab, setTab] = useState('tasks');
+            return (
+                <div className="page" style={{ maxWidth: 960, margin: '0 auto', padding: '50px 48px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: 36 }}>
+                        <div>
+                            <div className="card-flat" style={{ textAlign: 'center', padding: 32, marginBottom: 18 }}>
+                                <div className="av" style={{ width: 76, height: 76, fontSize: 27, margin: '0 auto 16px', border: '3px solid #E8FAF3' }}>{u.av}</div>
+                                <h2 style={{ fontFamily: 'Playfair Display,serif', fontSize: 20, marginBottom: 4 }}>{u.name}</h2>
+                                <div style={{ marginBottom: 4 }}><span className="stars" style={{ fontSize: 16 }}>{'★'.repeat(5)}</span></div>
+                                <div style={{ fontSize: 13, color: '#aaa', marginBottom: 16 }}>{u.rating} · {u.reviews} reviews</div>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center', marginBottom: 16 }}>{u.skills.map(s => <span key={s} className="tag" style={{ fontSize: 12 }}>{s}</span>)}</div>
+                                <p style={{ fontSize: 13, color: '#777', lineHeight: 1.6 }}>{u.bio}</p>
+                            </div>
+                            <div className="card-flat" style={{ padding: 20 }}>
+                                {[{ l: 'Member since', v: u.since }, { l: 'Tasks done', v: u.completed }, { l: 'Earnings', v: u.earnings }, { l: 'Response time', v: '< 2 min' }].map(s => (
+                                    <div key={s.l} className="between" style={{ padding: '10px 0', borderBottom: '1px solid #f5f5f5', fontSize: 14 }}>
+                                        <span style={{ color: '#aaa' }}>{s.l}</span><strong style={{ color: '#1a1a2e' }}>{s.v}</strong>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div>
+                            <div style={{ display: 'flex', gap: 0, marginBottom: 28, borderBottom: '1px solid #f0f0f0' }}>
+                                {['tasks', 'reviews'].map(t => (
+                                    <button key={t} onClick={() => setTab(t)}
+                                        style={{ background: 'none', border: 'none', padding: '12px 24px', fontSize: 14, fontWeight: tab === t ? 600 : 400, color: tab === t ? '#00A870' : '#888', borderBottom: tab === t ? '2px solid #00A870' : '2px solid transparent', cursor: 'pointer', fontFamily: 'DM Sans,sans-serif', transition: 'all 0.18s', textTransform: 'capitalize' }}>
+                                        {t === 'tasks' ? `My Tasks (${TASKS.slice(0, 5).length})` : `Reviews (${REVIEWS.length})`}
+                                    </button>
+                                ))}
+                            </div>
+                            {tab === 'tasks' && <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                                {TASKS.slice(0, 5).map(t => (
+                                    <div key={t.id} className="card-flat" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px' }}>
+                                        <div><div style={{ fontWeight: 600, fontSize: 14, color: '#1a1a2e', marginBottom: 4 }}>{t.title}</div><div style={{ fontSize: 12, color: '#aaa' }}>{t.cat} · Due {t.deadline}</div></div>
+                                        <div style={{ textAlign: 'right' }}><div style={{ color: '#00A870', fontWeight: 600, fontSize: 15 }}>PKR {t.budget.toLocaleString()}</div><span className="badge b-green" style={{ fontSize: 11, marginTop: 4 }}>Open</span></div>
+                                    </div>
+                                ))}
+                            </div>}
+                            {tab === 'reviews' && <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                                {REVIEWS.map((rv, i) => (
+                                    <div key={i} className="card-flat" style={{ padding: '20px 22px' }}>
+                                        <div className="between" style={{ marginBottom: 12 }}>
+                                            <div className="row"><div className="av" style={{ width: 36, height: 36, fontSize: 13 }}>{rv.av}</div><div><div style={{ fontWeight: 600, fontSize: 14 }}>{rv.name}</div><div style={{ fontSize: 11, color: '#aaa' }}>{rv.task} · {rv.date}</div></div></div>
+                                            <div className="stars" style={{ fontSize: 13 }}>{'★'.repeat(rv.r)}</div>
+                                        </div>
+                                        <p style={{ fontSize: 14, color: '#555', lineHeight: 1.6 }}>{rv.text}</p>
+                                    </div>
+                                ))}
+                            </div>}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        /* ══ SAVED ══ */
+        function Saved({ setPage, setTask, saved, onSave, showToast }) {
+            const list = TASKS.filter(t => saved.includes(t.id));
+            return (
+                <div className="page" style={{ maxWidth: 1000, margin: '0 auto', padding: '44px 48px' }}>
+                    <div style={{ marginBottom: 28 }}><h1 style={{ fontFamily: 'Playfair Display,serif', fontSize: 30, marginBottom: 4 }}>Saved Tasks</h1><p style={{ color: '#999', fontSize: 14 }}>{list.length} tasks saved</p></div>
+                    {list.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '80px 20px', color: '#aaa' }}>
+                            <div style={{ fontSize: 48, marginBottom: 16 }}>🔖</div>
+                            <p style={{ fontSize: 16, marginBottom: 16 }}>No saved tasks yet</p>
+                            <button className="btn btn-green" onClick={() => setPage('feed')}>Browse Tasks</button>
+                        </div>
+                    ) : (
+                        <div className="grid2">{list.map(t => <TaskCard key={t.id} task={t} onView={t => { setTask(t); setPage('detail'); }} onSave={id => { onSave(id); showToast('Removed from saved', '🗑️'); }} saved={saved} />)}</div>
+                    )}
+                </div>
+            );
+        }
+
+        /* ══ ADMIN ══ */
+        function Admin() {
+            const [tab, setTab] = useState('overview');
+            const stats = [{ l: 'Total Users', v: '1,240', icon: '👥', trend: '+12%' }, { l: 'Active Tasks', v: '87', icon: '📋', trend: '+5%' }, { l: 'Completed', v: '2,410', icon: '✅', trend: '+23%' }, { l: 'Revenue (PKR)', v: '4.2L', icon: '💰', trend: '+18%' }];
+            return (
+                <div className="page" style={{ maxWidth: 1060, margin: '0 auto', padding: '44px 48px' }}>
+                    <div style={{ marginBottom: 32 }}><div style={{ fontSize: 12, color: '#00A870', fontWeight: 500, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>Admin Panel</div><h1 style={{ fontFamily: 'Playfair Display,serif', fontSize: 30 }}>Dashboard</h1></div>
+                    <div className="grid4" style={{ marginBottom: 32 }}>
+                        {stats.map(s => (
+                            <div key={s.l} className="card-flat" style={{ padding: 22 }}>
+                                <div className="between" style={{ marginBottom: 12 }}><div style={{ fontSize: 24 }}>{s.icon}</div><span className="badge b-green">{s.trend}</span></div>
+                                <div style={{ fontFamily: 'Playfair Display,serif', fontSize: 30, color: '#1a1a2e', fontWeight: 600 }}>{s.v}</div>
+                                <div style={{ fontSize: 13, color: '#888', marginTop: 4 }}>{s.l}</div>
+                            </div>
+                        ))}
+                    </div>
+                    <div style={{ display: 'flex', gap: 0, marginBottom: 24, borderBottom: '1px solid #f0f0f0' }}>
+                        {['overview', 'users', 'tasks'].map(t => (
+                            <button key={t} onClick={() => setTab(t)} style={{ background: 'none', border: 'none', padding: '10px 24px', fontSize: 14, fontWeight: tab === t ? 600 : 400, color: tab === t ? '#00A870' : '#888', borderBottom: tab === t ? '2px solid #00A870' : '2px solid transparent', cursor: 'pointer', fontFamily: 'DM Sans,sans-serif', textTransform: 'capitalize' }}>
+                                {t === 'overview' ? 'Overview' : t === 'users' ? `Users (${USERS.length})` : `Tasks (${TASKS.length})`}
+                            </button>
+                        ))}
+                    </div>
+                    {(tab === 'overview' || tab === 'tasks') && (
+                        <div className="card-flat" style={{ marginBottom: 20 }}>
+                            <h3 style={{ fontWeight: 600, fontSize: 15, marginBottom: 16 }}>Recent Tasks</h3>
+                            <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse' }}>
+                                <thead><tr style={{ borderBottom: '1px solid #f0f0f0' }}>{['Task', 'Category', 'Budget', 'Distance', 'Status'].map(h => <th key={h} style={{ textAlign: 'left', padding: '8px 12px 12px', color: '#aaa', fontWeight: 500 }}>{h}</th>)}</tr></thead>
+                                <tbody>{TASKS.slice(0, 6).map(t => (
+                                    <tr key={t.id} style={{ borderBottom: '1px solid #f8f8f8' }}>
+                                        <td style={{ padding: '12px', color: '#1a1a2e', fontWeight: 500 }}>{t.title.slice(0, 38)}…</td>
+                                        <td style={{ padding: '12px' }}><span className="badge b-gray">{t.cat}</span></td>
+                                        <td style={{ padding: '12px', color: '#00A870', fontWeight: 600 }}>PKR {t.budget.toLocaleString()}</td>
+                                        <td style={{ padding: '12px', color: '#888' }}>{t.dist} km</td>
+                                        <td style={{ padding: '12px' }}><span className="badge b-green">Open</span></td>
+                                    </tr>
+                                ))}</tbody>
+                            </table>
+                        </div>
+                    )}
+                    {(tab === 'overview' || tab === 'users') && (
+                        <div className="card-flat">
+                            <h3 style={{ fontWeight: 600, fontSize: 15, marginBottom: 16 }}>Top Providers</h3>
+                            {USERS.map(u => (
+                                <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 0', borderBottom: '1px solid #f5f5f5' }}>
+                                    <div className="av" style={{ width: 42, height: 42, fontSize: 15 }}>{u.av}</div>
+                                    <div style={{ flex: 1 }}><div style={{ fontWeight: 600, fontSize: 14, color: '#1a1a2e', marginBottom: 2 }}>{u.name}</div><div style={{ fontSize: 12, color: '#aaa' }}>{u.completed} tasks · {u.skills.slice(0, 2).join(', ')}</div></div>
+                                    <div className="stars" style={{ fontSize: 13 }}>{u.rating} ★</div>
+                                    <span className="badge b-green">Verified</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        /* ══ LOGIN ══ */
+        function Login({ setPage, showToast }) {
+            const [mode, setMode] = useState('login');
+            const [role, setRole] = useState('customer');
+            const [step, setStep] = useState(1);
+            const [phone, setPhone] = useState('');
+            const [otp, setOtp] = useState(['', '', '', '', '', '']);
+            const handleOtp = (i, v) => { const n = [...otp]; n[i] = v.slice(-1); setOtp(n); if (v && i < 5) document.getElementById(`otp${i + 1}`)?.focus(); };
+            return (
+                <div className="auth-wrap">
+                    <div className="auth-card">
+                        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+                            <div style={{ fontFamily: 'Playfair Display,serif', fontSize: 26, color: '#00A870', fontWeight: 700, marginBottom: 16 }}>Nexo.</div>
+                            {step === 1 && <><h2 style={{ fontFamily: 'Playfair Display,serif', fontSize: 22, marginBottom: 6 }}>{mode === 'login' ? 'Welcome back' : 'Create account'}</h2><p style={{ fontSize: 14, color: '#999' }}>{mode === 'login' ? 'Sign in to your Nexo account' : 'Join Nexo — it\'s free'}</p></>}
+                            {step === 2 && <><h2 style={{ fontFamily: 'Playfair Display,serif', fontSize: 22, marginBottom: 6 }}>Verify your phone</h2><p style={{ fontSize: 14, color: '#999' }}>We sent a 6-digit code to {phone}</p></>}
+                        </div>
+                        {step === 1 && <>
+                            {mode === 'signup' && (
+                                <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+                                    {['customer', 'provider'].map(r => (
+                                        <button key={r} onClick={() => setRole(r)} style={{ flex: 1, padding: '10px', border: `2px solid ${role === r ? '#00A870' : '#e0e0e0'}`, borderRadius: 12, background: role === r ? '#E8FAF3' : '#fff', color: role === r ? '#00924a' : '#555', fontSize: 13, fontWeight: role === r ? 600 : 400, cursor: 'pointer', fontFamily: 'DM Sans,sans-serif', textTransform: 'capitalize', transition: 'all 0.18s' }}>
+                                            {r === 'customer' ? '🙋 Customer' : '🔧 Provider'}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                            {mode === 'signup' && <div className="fg"><label className="flabel">Full Name</label><input className="finput" placeholder="Ali Hassan" /></div>}
+                            <div className="fg"><label className="flabel">Phone Number</label><input className="finput" placeholder="+92 300 0000000" value={phone} onChange={e => setPhone(e.target.value)} /></div>
+                            <div className="fg"><label className="flabel">Password</label><input className="finput" type="password" placeholder="••••••••" /></div>
+                            <button className="btn btn-green btn-full" style={{ padding: '14px', fontSize: 15, borderRadius: 14, marginTop: 8 }} onClick={() => { if (phone) { setStep(2); } else showToast('Enter your phone number', '📱'); }}>
+                                {mode === 'login' ? 'Sign In →' : 'Continue →'}
+                            </button>
+                            <div className="div" />
+                            <p style={{ textAlign: 'center', fontSize: 13, color: '#999' }}>{mode === 'login' ? 'New to Nexo? ' : 'Already have an account? '}<span style={{ color: '#00A870', cursor: 'pointer', fontWeight: 600 }} onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}>{mode === 'login' ? 'Create account' : 'Sign in'}</span></p>
+                        </>}
+                        {step === 2 && <>
+                            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginBottom: 24 }}>
+                                {otp.map((v, i) => (
+                                    <input key={i} id={`otp${i}`} style={{ width: 46, height: 52, textAlign: 'center', fontSize: 20, fontWeight: 600, border: '2px solid #e0e0e0', borderRadius: 12, outline: 'none', fontFamily: 'DM Sans,sans-serif', color: '#1a1a2e', transition: 'border 0.18s' }}
+                                        maxLength={1} value={v} onChange={e => handleOtp(i, e.target.value)}
+                                        onFocus={e => { e.target.style.borderColor = '#00A870'; }} onBlur={e => { e.target.style.borderColor = '#e0e0e0'; }} />
+                                ))}
+                            </div>
+                            <button className="btn btn-green btn-full" style={{ padding: '14px', fontSize: 15, borderRadius: 14 }} onClick={() => { showToast('Signed in successfully!', '🎉'); setPage('feed'); }}>Verify & Continue</button>
+                            <div style={{ textAlign: 'center', marginTop: 16 }}><span style={{ fontSize: 13, color: '#aaa' }}>Didn't get it? </span><span style={{ fontSize: 13, color: '#00A870', cursor: 'pointer', fontWeight: 600 }} onClick={() => showToast('Code resent!', '📱')}>Resend</span></div>
+                            <button onClick={() => setStep(1)} style={{ display: 'block', margin: '14px auto 0', background: 'none', border: 'none', fontSize: 13, color: '#aaa', cursor: 'pointer', fontFamily: 'DM Sans,sans-serif' }}>← Change number</button>
+                        </>}
+                    </div>
+                </div>
+            );
+        }
+
+        /* ══ CONTROLLER / APP ══ */
+        function App() {
+            const [page, setPage] = useState('home');
+            const [task, setTask] = useState(null);
+            const [saved, setSaved] = useState([]);
+            const { toast, show: showToast } = useToast();
+            const onSave = id => setSaved(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
+            const render = () => {
+                switch (page) {
+                    case 'home': return <Home setPage={setPage} setTask={setTask} showToast={showToast} />;
+                    case 'feed': return <Feed setPage={setPage} setTask={setTask} saved={saved} onSave={onSave} showToast={showToast} />;
+                    case 'detail': return <Detail task={task} setPage={setPage} saved={saved} onSave={onSave} showToast={showToast} />;
+                    case 'post': return <PostTask setPage={setPage} showToast={showToast} />;
+                    case 'profile': return <Profile showToast={showToast} />;
+                    case 'saved': return <Saved setPage={setPage} setTask={setTask} saved={saved} onSave={onSave} showToast={showToast} />;
+                    case 'admin': return <Admin />;
+                    case 'login': return <Login setPage={setPage} showToast={showToast} />;
+                    default: return <Home setPage={setPage} setTask={setTask} showToast={showToast} />;
+                }
+            };
+            return (
+                <div>
+                    <Navbar page={page} setPage={setPage} saved={saved} />
+                    {render()}
+                    <Toast toast={toast} />
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+
+</html>
