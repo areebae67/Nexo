@@ -12,5 +12,13 @@ namespace nexowebapp.Data
         }
 
         public DbSet<TaskItem> Tasks { get; set; }
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<TaskItem>()
+                .Property(t => t.Budget)
+                .HasPrecision(18, 2);
+        }
     }
 }

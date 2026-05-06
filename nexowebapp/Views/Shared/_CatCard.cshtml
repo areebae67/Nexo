@@ -1,0 +1,7 @@
+@model nexowebapp.Models.ViewModels.CategoryViewModel
+
+<a class="cat-card" asp-controller="Task" asp-action="Index" asp-route-category="@Model.Name">
+    <div class="cat-icon" style="background: @Model.Color">@Model.Emoji</div>
+    <div style="font-weight: 600; font-size: 14px; color: #1a1a2e; margin-bottom: 4px">@Model.Name</div>
+    <div style="font-size: 12px; color: #aaa">@Model.Count tasks nearby</div>
+</a>

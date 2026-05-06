@@ -1,0 +1,19 @@
+<nav class="nav">
+    <a class="logo" asp-controller="Home" asp-action="Index">Nexo<span>.</span></a>
+    <div class="nav-links">
+        <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Task" && ViewContext.RouteData.Values["Action"]?.ToString() == "Index" ? "act" : "")" 
+           asp-controller="Task" asp-action="Index">Browse Tasks</a>
+        
+        <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Task" && ViewContext.RouteData.Values["Action"]?.ToString() == "Create" ? "act" : "")" 
+           asp-controller="Task" asp-action="Create">Post a Task</a>
+        
+        <a class="nav-link" href="#">Profile</a>
+        <a class="nav-link" href="#">Admin</a>
+        
+        <div style="position: relative; display: inline-block">
+            <button class="btn-icon">🔖</button>
+        </div>
+        
+        <a class="btn btn-green" href="#">Sign In</a>
+    </div>
+</nav>
