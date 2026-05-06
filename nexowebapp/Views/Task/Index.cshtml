@@ -1,0 +1,12 @@
+﻿@model IEnumerable<nexowebapp.Models.Entities.TaskItem>
+
+<h2>Tasks</h2>
+
+@foreach (var task in Model)
+{
+    <div>
+        <h3>@task.Title</h3>
+        <p>@task.Description</p>
+        <p>@task.Budget</p>
+    </div>
+}
